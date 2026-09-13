@@ -6,13 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Professional Login/Register</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../public/asset/css/style_login.css">
-    <script src="../../public/asset/js/login.js" defer></script>
+    <link rel="stylesheet" href="../../public/asset/css/login.css">
+    <script src="../../public/asset/js/logiin.js" defer></script>
 </head>
 
 <body>
     <video class="main-bg-video" autoplay loop muted playsinline>
-        <source src="../../public/asset/img/fuego.mp4" type="video/mp4">
+        <source src="../../public/asset/imgs/fuego.mp4" type="video/mp4">
     </video>
     <div class="auth-wrapper">
 
@@ -59,7 +59,7 @@
         <div class="switch-panel" id="switch-panel">
             <div class="switch-content" id="switch-login">
                 <video class="bg-video" autoplay loop muted playsinline>
-                    <source src="../../public/asset/img/circulo_azul.mp4" type="video/mp4">
+                    <source src="../../public/asset/imgs/circulo_azul.mp4" type="video/mp4">
                 </video>
                 <h2>¡Bienvenido de nuevo!</h2>
                 <p>Si ya tienes una cuenta, inicia sesión aquí.</p>
@@ -67,7 +67,7 @@
             </div>
             <div class="switch-content is-hidden" id="switch-register">
                 <video class="bg-video" autoplay loop muted playsinline>
-                    <source src="../../public/asset/img/negro.mp4" type="video/mp4">
+                    <source src="../../public/asset/imgs/negro.mp4" type="video/mp4">
                 </video>
                 <h2>Eres nuevo aquí?</h2>
                 <p>Regístrate ahora y empieza a usar nuestra plataforma.</p>
