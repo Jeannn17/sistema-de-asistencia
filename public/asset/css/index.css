@@ -95,7 +95,7 @@ header {
     left: 0;
     bottom: 0;
     width: 250px;
-    background-color: #ffffff;
+    background-color: hsl(211, 61%, 43%) !important;
     box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
     border-right: 1px solid var(--border-color);
     border-radius: 0 8px 8px 0;
