@@ -1,0 +1,221 @@
+/* Reset básico para márgenes consistentes */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f4f6f9; /* Fondo gris claro suave */
+    height: 100vh;
+}
+
+/* =========================================
+   MENÚ LATERAL FIJO (Línea Roja)
+========================================= */
+.sidebar {
+    width: 260px;
+    background-color:  hsl(211, 84%, 26%); /* Azul oscuro elegante */
+    color: white;
+    height: calc(100vh - 60px);
+    position: fixed; /* Lo mantiene fijo a la izquierda */
+    left: 0;
+    top: 60px;
+    padding: 20px 0;
+    /* Borde rojo temporal para que identifiques tu línea roja */
+    border-right: 2px solid red; 
+}
+
+.sidebar .logo {
+    text-align: center;
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 30px;
+    padding: 0 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+}
+
+.sidebar ul li a {
+    display: block;
+    color: #b8c7ce;
+    text-decoration: none;
+    padding: 15px 25px;
+    transition: 0.3s;
+}
+
+.sidebar ul li a:hover {
+    background-color: #759fc6;
+    color: white;
+    border-left: 4px solid #02124b;
+}
+
+/* =========================================
+   CONTENIDO PRINCIPAL
+========================================= */
+.main-content {
+    margin-left: 260px; /* Deja el espacio exacto del menú lateral */
+    margin-top: 60px;
+    width: calc(100% - 260px);
+    padding: 30px;
+}
+
+/* CONTENEDOR ENCAPSULADOR (Línea Amarilla) */
+.data-wrapper {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 25px;
+    min-height: 85vh; /* Ocupa casi toda la pantalla */
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05); /* Sombra sutil */
+    /* Borde amarillo para representar tu boceto */
+    border: 3px solid #ffcc00; 
+}
+
+/* =========================================
+   BUSCADOR Y FILTROS (Línea Negra)
+========================================= */
+.search-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 15px;
+    margin-bottom: 30px;
+    /* Borde negro inferior como guía */
+    border-bottom: 2px solid #333; 
+    padding-bottom: 20px;
+}
+
+.search-input-group {
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Hace que la barra de búsqueda ocupe el espacio disponible */
+    background-color: #f1f3f5;
+    border-radius: 6px;
+    padding: 10px 15px;
+    border: 1px solid #ced4da;
+}
+
+.search-input-group input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    margin-left: 10px;
+    outline: none;
+    font-size: 16px;
+}
+
+.filter-btn {
+    background-color: #ffffff;
+    border: 1px solid #ced4da;
+    padding: 10px 20px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: #495057;
+    transition: 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.filter-btn:hover {
+    background-color: #e9ecef;
+}
+
+/* Espacio libre */
+.content-area {
+    color: #a0a0a0;
+    text-align: center;
+    margin-top: 50px;
+    font-style: italic;
+}
+
+/* Header / Navbar */
+header {
+   width: 100%;
+    height: 60px; /* Misma altura que el margen superior del sidebar y main */
+    background-color: #ffffff; /* Cambié la variable por un color fijo blanco */
+    border-bottom: 1px solid #dcdcdc;
+    padding: 0 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    position: fixed; /* Lo ancla a la parte superior */
+    top: 0;
+    left: 0;
+    z-index: 1001; /* Lo mantiene por encima de todo */
+}
+.menu-container {
+    display: flex;
+    align-items: center;
+    height: 100%;
+    position: relative;
+    margin-left: auto;
+}
+
+/* Botón Hamburguesa */
+.hamburger-btn {
+    background-color: #2c3e50;
+    border: none;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    align-items: center;
+    width: 38px;
+    height: 38px;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.hamburger-btn span {
+    display: block;
+    width: 100%;
+    height: 3px;
+    background-color: #ffffff;
+    border-radius: 2px;
+}
+.dropdown-menu {
+    display: none;
+    position: fixed;
+    top: 60px;  
+    right: 0;
+    bottom: 0;
+    width: 250px;
+    background-color: hsl(211, 61%, 43%) !important;
+    box-shadow: -4px 0 12px rgba(0, 0, 0, 0.1);
+    border-left: 1px solid #dcdcdc;
+    border-radius: 8px 0 0 8px;
+    z-index: 1000;
+    padding-top: 15px;
+    overflow-y: auto;
+}
+
+.dropdown-menu.active {
+    display: block;
+}
+
+/* Opciones del menú centradas verticalmente */
+.dropdown-menu a {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    height: 48px;
+    color: var(--text-main);
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s;
+    box-sizing: border-box;
+}
+
+.dropdown-menu a:hover {
+    background-color: #1b80c3;
+    color: var(--primary-color);
+}
