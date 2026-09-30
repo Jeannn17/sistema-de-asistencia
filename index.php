@@ -1,12 +1,12 @@
 <?php
-require_once __DIR__. '/config/database.php';
-require_once __DIR__ . '/models/asistenciaModel.php';
-require_once __DIR__ . '/controllers/asistenciaController.php';
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/app/models/registro.php';
+require_once __DIR__ . '/app/controllers/registroController.php';
 
 $db= database::conect();
-$modelClass = 'asistenciaModel';
+$modelClass = 'registro';
 $model = new $modelClass($db);
-$controller= new asistenciaController($model);
+$controller= new registroController($model);
 
 $action = $_GET['action'] ?? 'index';
 $id     = isset($_GET['id']) ? (int)$_GET['id'] : null;
@@ -14,6 +14,8 @@ $file   = $_FILES['file'] ?? null;
 
 switch($action){
     case 'index'; $controller->index(); break;
-    case 'validarSubidaExcel': $controller->validarSubidaExcel($file); break;
-    case 'procesarExcel': $controller->procesarExcel(); break;
+    case 'create': $controller->create(); break;
+    case 'store': $controller->store(); break;
+    case 'editView': $controller->editView($id); break;
+    case 'update': $controller->update(); break;
 }

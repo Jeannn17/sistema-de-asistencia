@@ -6,11 +6,11 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date;
 
 class asistenciaController{
-    private $asistenciaModel;
+    private $asistenciaController;
 
-    public function __construct($asistenciaModel)
+    public function __construct($asistenciaController)
     {
-        $this->asistenciaModel= $asistenciaModel;
+        $this->asistenciaController= $asistenciaController;
     }
 
     public function index(){
@@ -146,7 +146,7 @@ class asistenciaController{
                 }
             }
             if(!empty($asistenciasValidas)){
-                $this->asistenciaModel->registrarAsistenciaMasiva($asistenciasValidas);
+                $this->asistenciaController->registrarAsistenciaMasiva($asistenciasValidas);
 
                 $_SESSION['alerta'] = [
                     'tipo' => 'success',
