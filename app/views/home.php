@@ -29,7 +29,11 @@
     </div>
     
 </div>
-           <button class="btn login" id="login">Login</button>
+           <?php if (isset($_SESSION['usuario'])): ?>
+               <a href="/index.php?action=dashboard" class="btn login" id="login">Ir al panel</a>
+           <?php else: ?>
+               <a href="/index.php?action=login" class="btn login" id="login">Login</a>
+           <?php endif; ?>
     </header>
 
     <!-- Contenido Principal -->

@@ -3,171 +3,205 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\IOFactory;
-use PhpOffice\PhpSpreadsheet\Shared\Date;
 
-class asistenciaController{
-    private $asistenciaController;
+class asistenciaController
+{
+    /** Hoja del informe del biométrico que trae TODAS las marcaciones crudas por día */
+    private const HOJA_REGISTROS = 'Registros de asistencia';
 
-    public function __construct($asistenciaController)
+    /**
+     * Cuando un día trae una sola marcación no se sabe si es entrada o salida.
+     * Antes de esta hora se toma como Entrada; desde esta hora, como Salida.
+     */
+    private const HORA_CORTE = 12;
+
+    private asistenciaModel $model;
+
+    public function __construct(PDO $db)
     {
-        $this->asistenciaController= $asistenciaController;
+        $this->model = new asistenciaModel($db);
     }
 
-    public function index(){
-        require_once __DIR__ .'/../views/index.php';
-    }
-
-/** 
- * 
- * 
-* @param array|null $file
-* @return array
-*/
-    public function validarSubidaExcel($file){
-        if(!$file || empty($file['name'])){
-           return[
-            'valido' => false,
-            'mensaje' => 'no se a selecionado ningun archivo'
-           ];
+    public function validarSubidaExcel(?array $file): array
+    {
+        if (!$file || empty($file['name'])) {
+            return ['valido' => false, 'mensaje' => 'No se ha seleccionado ningún archivo'];
         }
-        if($file['error'] != UPLOAD_ERR_OK){
-            return[
-                'valido' => false,
-                'mensaje' => 'Error al subir el archivo. Error='. $file['error']
-            ];
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            return ['valido' => false, 'mensaje' => 'Error al subir el archivo. Error=' . $file['error']];
         }
 
         $extension = strtolower(pathinfo($file['name'], PATHINFO_EXTENSION));
-        $extensionesPermitidas = ['xlsx', 'xls', 'csv'];
-
-        if(!in_array($extension, $extensionesPermitidas)){
-            return[
-                'valido' => false,
-                'mensaje' => 'Formato incorrecto. Por farvor subir un formato que sea .xlsx, .xls o .csv.'
-            ];
+        if (!in_array($extension, ['xlsx', 'xls'], true)) {
+            return ['valido' => false, 'mensaje' => 'Formato incorrecto. Sube un archivo .xlsx o .xls.'];
         }
-        return[
-            'valido' => true,
-            'mensaje' => 'archivo valido'
-        ];
+
+        return ['valido' => true, 'mensaje' => 'Archivo válido'];
     }
 
-    public function procesarExcel(){
-        if($_SERVER['REQUEST_METHOD'] !== 'POST'){
-            header('location: index.php?controllers=asistencia&accion=index');
-            exit;
+    /** Acción del router: index.php?action=asistencia (POST con archivo_excel) */
+    public function importar(): void
+    {
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirigir('import_error');
         }
-            $file= $_FILES['archivo_excel']?? null;
-            $validacion= $this->validarSubidaExcel($file);
-            
-            if(!$validacion['valido']){
-                $_SESSION['alerta']= [
-                    'tipo' => 'danger',
-                    'mensaje' => $validacion['mensaje']
-                ];
-                header('location: index.php?controllers=asistencia&accion=index');
-                exit;
+
+        $file       = $_FILES['archivo_excel'] ?? null;
+        $validacion = $this->validarSubidaExcel($file);
+        if (!$validacion['valido']) {
+            $this->redirigir('import_invalido');
+        }
+
+        try {
+            $marcaciones = $this->leerMarcaciones($file['tmp_name']);
+
+            if (empty($marcaciones)) {
+                $this->redirigir('import_vacio');
             }
-            try {
-            $spreadsheet = IOFactory::load($file['tmp_name']);
-            $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray(null, true, true, true);
-            $cabezera= true;
-            $asistenciasValidas= [];
-            $errores= [];
 
-            foreach ($spreadsheet->getAllSheets() as $hoja) {
-                $nombreHoja = $hoja->getTitle();
+            $resultado = $this->model->registrarMarcaciones($marcaciones);
 
-                // Ignoramos las hojas informativas o de resumen
-                if (in_array($nombreHoja, [
-                    'Información de turnos',
-                    'Hoja de resumen de asistencia',
-                    'Registros de asistencia',
-                    'Estadísticas de anormalías'
-                ])) {
+            $this->redirigir('import_ok', [
+                'insertados' => $resultado['insertados'],
+                'duplicados' => $resultado['duplicados'],
+                'omitidos'   => count($resultado['sin_registro']), // empleados del Excel que no están en 'personal'
+            ]);
+        } catch (Throwable $e) {
+            error_log('Error al importar asistencia: ' . $e->getMessage());
+            $this->redirigir('import_error');
+        }
+    }
+
+    /**
+     * Lee la hoja "Registros de asistencia" y la convierte en una lista de marcaciones.
+     *
+     * Estructura de la hoja: un bloque de 4 filas por empleado
+     *   fila 0: "ID." | <nro> | "Nombre" | ... | "Depart." | ...
+     *   fila 1: números de día (1..31)
+     *   fila 2: nombre del día (Dom, Lun...)
+     *   fila 3: marcaciones de cada día, ej. "07:07\n18:09" (una hora por línea)
+     *
+     * @return array<int, array{nro_registro:int, fecha_hora:string, tipo:string}>
+     */
+    private function leerMarcaciones(string $ruta): array
+    {
+        $reader = IOFactory::createReaderForFile($ruta);
+        $reader->setReadDataOnly(true);                       // más rápido y menos memoria
+        $reader->setLoadSheetsOnly([self::HOJA_REGISTROS]);   // el informe trae ~54 hojas, solo se necesita una
+
+        $spreadsheet = $reader->load($ruta);
+        $hoja        = $spreadsheet->getSheetByName(self::HOJA_REGISTROS);
+        if ($hoja === null) {
+            throw new RuntimeException('El archivo no contiene la hoja "' . self::HOJA_REGISTROS . '".');
+        }
+
+        // Valores crudos, índices numéricos desde 0
+        $filas = $hoja->toArray(null, false, false, false);
+        [$anio, $mes] = $this->obtenerAnioMes($filas);
+
+        $marcaciones = [];
+        $total       = count($filas);
+
+        for ($i = 0; $i < $total; $i++) {
+            if (trim((string) ($filas[$i][0] ?? '')) !== 'ID.') {
+                continue; // no es el inicio de un bloque de empleado
+            }
+
+            // El N° de registro es el primer número de la fila "ID."
+            $nro = null;
+            foreach ($filas[$i] as $col => $valor) {
+                if ($col > 0 && is_numeric($valor)) {
+                    $nro = (int) $valor;
+                    break;
+                }
+            }
+            if ($nro === null) {
+                continue;
+            }
+
+            $filaDias   = $filas[$i + 1] ?? [];
+            $filaMarcas = $filas[$i + 3] ?? [];
+
+            foreach ($filaDias as $col => $dia) {
+                if (!is_numeric($dia)) {
                     continue;
                 }
-                $worksheet = $hoja;
-                $nombre1= $worksheet->getCell('J3')->getValue();
-                $id1= $worksheet->getCell('J4')->getValue();
+                $dia   = (int) $dia;
+                $celda = trim((string) ($filaMarcas[$col] ?? ''));
 
-                $nombre2= $worksheet->getCell('Y3')->getValue();
-                $id2= $worksheet->getCell('Y4')->getValue();
+                if ($celda === '' || !checkdate($mes, $dia, $anio)) {
+                    continue;
+                }
 
-                $nombre3= $worksheet->getCell('AN3')->getValue();
-                $id3= $worksheet->getCell('AN4')->getValue();
+                $horas = $this->extraerHoras($celda);
+                if (empty($horas)) {
+                    continue;
+                }
 
-                $asistenciaEmpleado1=[];
-                $asistenciaEmpleado2=[];
-                $asistenciaEmpleado3=[];
+                $fecha = sprintf('%04d-%02d-%02d', $anio, $mes, $dia);
 
-                for($file= 12; $file <= 42; $file++){
-                    $diaMes = $file - 11;
-                    if(!empty($id1)){
-                        $entrada1= $worksheet->getCell('K'. $file)->getValue();
-                        $salida1= $worksheet->getCell('N'. $file)->getValue();
-                        
-                        if(!empty($entrada1) || !empty($salida1)){
-                            $asistenciasValidas[]= [
-                                'id_personal'=> $id1,
-                                'dia'=> $diaMes,
-                                'entrada'=> $entrada1,
-                                'salida'=> $salida1
-                            ];
-                        }
-                    }
-                    if(!empty($id2)){
-                        $entrada2= $worksheet->getCell('Z'. $file)->getValue();
-                        $salida2= $worksheet->getCell('AB'. $file)->getValue();
-                        
-                        if(!empty($entrada2) || !empty($salida2)){
-                            $asistenciasValidas[]= [
-                                'id_personal'=> $id2,
-                                'dia'=> $diaMes,
-                                'entrada'=> $entrada2,
-                                'salida'=> $salida2
-                            ];
-                        }
-                    }
-                    if(!empty($id3)){
-                        $entrada3= $worksheet->getCell('AO'. $file)->getValue();
-                        $salida3= $worksheet->getCell('AQ'. $file)->getValue();
-                        
-                        if(!empty($entrada3) || !empty($salida3)){
-                            $asistenciasValidas[]= [
-                                'id_personal'=> $id3,
-                                'dia'=> $diaMes,
-                                'entrada'=> $entrada3,
-                                'salida'=> $salida3
-                            ];
-                        }
-                    }
+                foreach ($this->clasificarMarcaciones($horas) as $tipo => $hora) {
+                    $marcaciones[] = [
+                        'nro_registro' => $nro,
+                        'fecha_hora'   => $fecha . ' ' . $hora . ':00',
+                        'tipo'         => $tipo,
+                    ];
                 }
             }
-            if(!empty($asistenciasValidas)){
-                $this->asistenciaController->registrarAsistenciaMasiva($asistenciasValidas);
+        }
 
-                $_SESSION['alerta'] = [
-                    'tipo' => 'success',
-                    'mensaje' => 'Informe de asistencia procesado e insertado con éxito.'
-                ];
-            } else {
-                $_SESSION['alerta'] = [
-                    'tipo' => 'warning',
-                    'mensaje' => 'No se encontraron datos de asistencia para procesar.'
-                ];
-            }
+        return $marcaciones;
+    }
 
-            header('Location: index.php?controllers=asistencia&accion=index');
-            exit;   
-            }catch (\Exception $e) {
-                $_SESSION['alerta'] = [
-                'tipo' => 'danger',
-                'mensaje' => 'Error al leer el archivo excel: ' . $e->getMessage()
-            ];
-            header('Location: index.php?controllers=asistencia&accion=index');
-            exit;
+    /** Lee el rango "01/02/2026 ~ 28/02/2026" (dd/mm/aaaa) de las primeras filas. */
+    private function obtenerAnioMes(array $filas): array
+    {
+        foreach (array_slice($filas, 0, 5) as $fila) {
+            foreach ($fila as $valor) {
+                if (is_string($valor) && preg_match('#(\d{1,2})/(\d{1,2})/(\d{4})\s*~#', $valor, $m)) {
+                    return [(int) $m[3], (int) $m[2]];
+                }
             }
-    }                    
+        }
+        throw new RuntimeException('No se encontró el rango de fechas del informe.');
+    }
+
+    /** "07:07\n18:09" -> ['07:07', '18:09'] (ordenadas y sin repetidas) */
+    private function extraerHoras(string $texto): array
+    {
+        preg_match_all('/\b([01]?\d|2[0-3]):([0-5]\d)\b/', $texto, $m, PREG_SET_ORDER);
+
+        $horas = [];
+        foreach ($m as $par) {
+            $horas[] = sprintf('%02d:%02d', $par[1], $par[2]);
+        }
+        $horas = array_values(array_unique($horas));
+        sort($horas);
+        return $horas;
+    }
+
+    /**
+     * 2 o más marcaciones: la primera es Entrada y la última Salida (las intermedias se ignoran).
+     * 1 sola marcación: se decide por la hora (HORA_CORTE).
+     *
+     * @return array<string,string> ['Entrada' => 'HH:MM', 'Salida' => 'HH:MM']
+     */
+    private function clasificarMarcaciones(array $horas): array
+    {
+        if (count($horas) >= 2) {
+            return ['Entrada' => $horas[0], 'Salida' => end($horas)];
+        }
+
+        $hora = (int) substr($horas[0], 0, 2);
+        return $hora < self::HORA_CORTE
+            ? ['Entrada' => $horas[0]]
+            : ['Salida'  => $horas[0]];
+    }
+
+    private function redirigir(string $status, array $extra = []): void
+    {
+        $query = http_build_query(['action' => 'dashboard', 'status' => $status] + $extra);
+        header('Location: index.php?' . $query);
+        exit;
+    }
 }

@@ -87,8 +87,9 @@ class Registro {
             if ($this->pdo->inTransaction()) {
                 $this->pdo->rollBack();
             }
-            die("Error en la Base de Datos: " . $e->getMessage());
-            return false;
+            // Se relanza para que el controlador decida qué mensaje mostrar
+            // (antes se usaba die(), que mostraba el error de la base al usuario y cortaba todo)
+            throw $e;
         }
     }
 
