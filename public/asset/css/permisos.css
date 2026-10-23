@@ -1,0 +1,126 @@
+/* =========================================
+   MÓDULO DE PERMISOS / JUSTIFICACIONES
+   (reutiliza .input-group, .inputs-grid, .btn-guardar-lote y .header-paso de dashboard.css)
+========================================= */
+.permisos-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    padding: 10px 0 30px;
+    width: 100%;
+}
+
+.permiso-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-left: 5px solid #2c3e50;
+    border-radius: 12px;
+    padding: 25px 30px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+}
+
+.permiso-card .header-paso {
+    margin-bottom: 20px;
+}
+
+.permiso-subtitulo {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+}
+
+/* Campos que ocupan toda la fila */
+.input-wide {
+    grid-column: 1 / -1;
+}
+
+.input-group textarea {
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 0.95rem;
+    outline: none;
+    resize: vertical;
+    min-height: 90px;
+    transition: border-color 0.2s;
+}
+
+.input-group textarea:focus {
+    border-color: #3498db;
+}
+
+.input-group input:invalid:not(:placeholder-shown):not(:focus) {
+    border-color: #dc3545;
+}
+
+.contador-motivo {
+    font-size: 0.75rem;
+    color: #868e96;
+    text-align: right;
+}
+
+/* Campos que se muestran u ocultan según el tipo */
+.campo-oculto {
+    display: none;
+}
+
+/* Tabla de permisos recientes */
+.permisos-lista h3 {
+    color: #2c3e50;
+    margin-bottom: 12px;
+    font-size: 1.05rem;
+}
+
+.permisos-tabla-wrapper {
+    overflow-x: auto;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+.permisos-tabla {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.permisos-tabla th {
+    background: #2c3e50;
+    color: #ffffff;
+    text-align: left;
+    padding: 10px 14px;
+    white-space: nowrap;
+}
+
+.permisos-tabla td {
+    padding: 10px 14px;
+    border-bottom: 1px solid #edf0f3;
+    color: #334155;
+    vertical-align: top;
+}
+
+.permisos-tabla tr:last-child td {
+    border-bottom: none;
+}
+
+.permisos-vacio {
+    text-align: center;
+    color: #868e96;
+    padding: 25px;
+}
+
+/* Etiqueta de color por tipo */
+.badge-tipo {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.badge-reposo            { background: #e0f2fe; color: #075985; }
+.badge-accidente_laboral { background: #fee2e2; color: #991b1b; }
+.badge-permiso_dia       { background: #ede9fe; color: #5b21b6; }
+.badge-salida_temprana   { background: #fef3c7; color: #92400e; }
+.badge-llegada_tarde     { background: #dcfce7; color: #166534; }
