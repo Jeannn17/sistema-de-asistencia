@@ -1,86 +1,85 @@
 <?php
-class Registro{
-    private PDO $db; // Encapsulación: solo este clase toca la conexión
 
-    public function __construct(PDO $db) {
-        $this->db = $db; // Inyección de dependencias clara
+class asistenciaModel
+{
+    private PDO $db;
+
+    public function __construct(PDO $db)
+    {
+        $this->db = $db;
     }
 
-    public function obtenerIdPersonaPorRegistro($nroRegistro) {
-        $sql = "SELECT id_persona FROM personal WHERE nro_registro = :nro_registro AND activo = true";
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([':nro_registro' => $nroRegistro]);
-        $resultado = $stmt->fetch(\PDO::FETCH_ASSOC);
-
-        return $resultado ? $resultado['id_persona'] : null;
-    }
     /**
-     * Registra las entradas y salidas en la tabla 'asistencia'
-     * 
-     * @param array $asistencias Lote de registros extraídos del Excel
-     * @param string|null $mesAno Fecha base en formato YYYY-MM (ej: '2026-02')
+     * Devuelve [nro_registro => id_persona] de todo el personal activo.
+     * Se carga una sola vez por importación (antes se hacía una consulta por marcaje).
      */
+    public function obtenerMapaPersonal(): array
+    {
+        $sql = 'SELECT nro_registro, id_persona
+                FROM personal
+                WHERE activo = true AND nro_registro IS NOT NULL';
+        return $this->db->query($sql)->fetchAll(PDO::FETCH_KEY_PAIR);
+    }
 
-    public function registrarAsistenciaMasiva(array $asistencias, $mesAno = null) {
-        // Si no se especifica año/mes, toma el mes actual
-        if (!$mesAno) {
-            $mesAno = date('Y-m'); 
-        }
+    /**
+     * Guarda las marcaciones en la tabla 'asistencia' dentro de una transacción.
+     *
+     * Cada marcación debe venir así:
+     *   ['nro_registro' => 12, 'fecha_hora' => '2026-02-03 07:07:00', 'tipo' => 'Entrada'|'Salida']
+     *
+     * @return array{insertados:int, duplicados:int, sin_registro:int[]}
+     */
+    public function registrarMarcaciones(array $marcaciones): array
+    {
+        $mapa        = $this->obtenerMapaPersonal();
+        $insertados  = 0;
+        $duplicados  = 0;
+        $sinRegistro = [];
+
+        // ON CONFLICT usa el índice único ux_asistencia_marcacion (ver migracion_asistencia.sql)
+        $sql = 'INSERT INTO asistencia (id_persona, fecha_hora, tipo_movimiento)
+                VALUES (:id_persona, :fecha_hora, :tipo)
+                ON CONFLICT (id_persona, fecha_hora, tipo_movimiento) DO NOTHING';
 
         try {
             $this->db->beginTransaction();
-
-            // Consulta INSERT para la tabla 'asistencia'
-            $sql = "INSERT INTO asistencia (id_persona, fecha_hora, tipo_movimiento) 
-                    VALUES (:id_persona, :fecha_hora, :tipo_movimiento)";
-
             $stmt = $this->db->prepare($sql);
 
-            foreach ($asistencias as $registro) {
-                // 1. Buscamos el id_persona que tenga este nro_registro
-                $idPersona = $this->obtenerIdPersonaPorRegistro($registro['id_personal']);
+            foreach ($marcaciones as $m) {
+                $nro = (int) $m['nro_registro'];
 
-                if (!$idPersona) {
-                    continue; // Si el nro_registro no está registrado en el colegio, lo ignora
+                if (!isset($mapa[$nro])) {
+                    // El N° de registro del Excel no existe (o está inactivo) en 'personal'
+                    $sinRegistro[$nro] = $nro;
+                    continue;
                 }
 
-                // 2. Construimos la fecha en formato YYYY-MM-DD
-                $diaFormateado = str_pad($registro['dia'], 2, '0', STR_PAD_LEFT);
-                $fechaBase = $mesAno . '-' . $diaFormateado;
+                $stmt->execute([
+                    ':id_persona' => $mapa[$nro],
+                    ':fecha_hora' => $m['fecha_hora'],
+                    ':tipo'       => $m['tipo'],
+                ]);
 
-                // 3. Insertar marcaje de ENTRADA si existe
-                if (!empty($registro['entrada'])) {
-                    $fechaHoraEntrada = $fechaBase . ' ' . trim($registro['entrada']) . ':00';
-                    
-                    $stmt->execute([
-                        ':id_persona'      => $idPersona,
-                        ':fecha_hora'      => $fechaHoraEntrada,
-                        ':tipo_movimiento' => 'ENTRADA'
-                    ]);
-                }
-
-                // 4. Insertar marcaje de SALIDA si existe
-                if (!empty($registro['salida'])) {
-                    $fechaHoraSalida = $fechaBase . ' ' . trim($registro['salida']) . ':00';
-                    
-                    $stmt->execute([
-                        ':id_persona'      => $idPersona,
-                        ':fecha_hora'      => $fechaHoraSalida,
-                        ':tipo_movimiento' => 'SALIDA'
-                    ]);
+                if ($stmt->rowCount() === 1) {
+                    $insertados++;
+                } else {
+                    $duplicados++;
                 }
             }
 
-            // Confirmar transacción
             $this->db->commit();
-            return true;
-
-        } catch (\PDOException $e) {
+        } catch (PDOException $e) {
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
-            throw new \Exception("Error al registrar la asistencia en PostgreSQL: " . $e->getMessage());
+            // Se relanza para que el controlador decida el mensaje (igual que Registro::createBatch)
+            throw $e;
         }
+
+        return [
+            'insertados'   => $insertados,
+            'duplicados'   => $duplicados,
+            'sin_registro' => array_values($sinRegistro),
+        ];
     }
 }
-?>

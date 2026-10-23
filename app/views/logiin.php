@@ -39,19 +39,22 @@
 
 
         <div class="form-container login-container" id="login-container">
-            <form class="form-box" id="login-form">
+            <form class="form-box" id="login-form" action="index.php?action=autenticar" method="POST">
                 <h2 class="form-title">Login</h2>
                 <p class="form-description">Inicia sesión con tu cuenta actual para continuar.</p>
+                <?php if (!empty($error)): ?>
+                    <p style="color: #ff4d4d; font-size: 0.9rem; margin-bottom: 10px;"><?= htmlspecialchars($error) ?></p>
+                <?php endif; ?>
                 <div class="form-group">
                     <label for="login-email">Usuario</label>
-                    <input id="login-email" type="email" placeholder="ejemplo: user@email.com">
+                   <input id="login-usuario" type="text" name="usuario" placeholder="ejemplo: tu_usuario" required>
                 </div>
                 <div class="form-group">
                     <label for="login-password">Contraseña</label>
-                    <input id="login-password" type="password" placeholder="********">
+                   <input id="login-password" type="password" name="clave" placeholder="********" required>
                 </div>
 
-                <button class="form-button submit-button">Login</button>
+                <button class="form-button submit-button" type="submit">Login</button>
             </form>
         </div>
 

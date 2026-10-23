@@ -507,3 +507,121 @@ header {
     background-color: #e74c3c; /* Rojo */
     border-left: 6px solid #c0392b;
 }
+
+/* =========================================
+   MÓDULO DE IMPORTACIÓN ASISTENCIA ETL
+   ========================================= */
+
+/* Contenedor principal para centrar la tarjeta */
+.import-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 50px 20px;
+    width: 100%;
+}
+
+/* Tarjeta contenedora con sombra suave */
+.import-card {
+    background: #ffffff;
+    width: 100%;
+    max-width: 520px;
+    padding: 35px 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e2e8f0;
+    text-align: center;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Encabezado y títulos */
+.import-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.import-header h3 {
+    font-size: 1.25rem;
+    color: #1e293b;
+    font-weight: 700;
+    margin: 0;
+    font-style: normal;
+}
+
+.import-subtitle {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 25px;
+    line-height: 1.5;
+    font-style: normal;
+}
+
+/* Zona de soltar/seleccionar archivo */
+.file-drop-area {
+    position: relative;
+    border: 2px dashed #3b82f6;
+    background-color: #f8fafc;
+    border-radius: 10px;
+    padding: 35px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.25s ease-in-out;
+    margin-bottom: 22px;
+    cursor: pointer;
+}
+
+.file-drop-area:hover {
+    background-color: #eff6ff;
+    border-color: #2563eb;
+}
+
+.file-msg {
+    font-size: 0.95rem;
+    color: #334155;
+    font-weight: 500;
+    pointer-events: none;
+    font-style: normal;
+}
+
+/* Ocultar el input real para hacerlo interactivo sobre toda el área */
+.file-input {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Botón principal ETL */
+.btn-primary-etl {
+    background-color: #1e3a8a; /* Azul institucional */
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 13px 20px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25);
+}
+
+.btn-primary-etl:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-primary-etl:active {
+    transform: scale(0.99);
+}
