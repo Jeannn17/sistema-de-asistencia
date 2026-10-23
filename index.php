@@ -9,8 +9,10 @@ $db = database::conect();
 require_once __DIR__ . '/app/models/registro.php';
 require_once __DIR__ . '/app/models/asistenciaModel.php';
 require_once __DIR__ . '/app/models/usuarioModel.php';
+require_once __DIR__ . '/app/models/justificacionModel.php';
 require_once __DIR__ . '/app/controllers/registroController.php';
 require_once __DIR__ . '/app/controllers/asistenciaController.php';
+require_once __DIR__ . '/app/controllers/permisosController.php';
 require_once __DIR__ . '/app/controllers/loginController.php';
 
 
@@ -52,6 +54,10 @@ switch ($action) {
         // Vista principal del sistema tras iniciar sesión.
         // Los turnos se cargan desde la BD para el formulario de registro de personal.
         $turnos = (new Registro($db))->getTurnos();
+        // Datos del módulo Permisos (personal activo y últimas justificaciones)
+        $datosPermisos    = (new permisosController($db))->datosVista();
+        $personalPermisos = $datosPermisos['personal'];
+        $permisosRecientes = $datosPermisos['recientes'];
         include __DIR__ . '/app/views/dashboard.php';
         break;
 
@@ -60,6 +66,12 @@ switch ($action) {
         $asistenciaController= new asistenciaController($db);
         $asistenciaController->importar();
         
+        break;
+
+    case 'permiso_guardar':
+        // Guarda un permiso / justificación (reposo, accidente, salida temprana, etc.)
+        $permisosController = new permisosController($db);
+        $permisosController->guardar();
         break;
 
     case 'personal':
