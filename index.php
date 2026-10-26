@@ -10,6 +10,7 @@ require_once __DIR__ . '/app/models/registro.php';
 require_once __DIR__ . '/app/models/asistenciaModel.php';
 require_once __DIR__ . '/app/models/usuarioModel.php';
 require_once __DIR__ . '/app/models/justificacionModel.php';
+require_once __DIR__ . '/app/models/dashboardModel.php';
 require_once __DIR__ . '/app/controllers/registroController.php';
 require_once __DIR__ . '/app/controllers/asistenciaController.php';
 require_once __DIR__ . '/app/controllers/permisosController.php';
@@ -58,6 +59,8 @@ switch ($action) {
         $datosPermisos    = (new permisosController($db))->datosVista();
         $personalPermisos = $datosPermisos['personal'];
         $permisosRecientes = $datosPermisos['recientes'];
+        // Resumen real para la pantalla de Inicio
+        $resumen = (new dashboardModel($db))->obtenerResumen();
         include __DIR__ . '/app/views/dashboard.php';
         break;
 

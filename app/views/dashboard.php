@@ -1,71 +1,238 @@
+<?php
+$e = fn($v) => htmlspecialchars((string) $v, ENT_QUOTES, 'UTF-8');
+
+// Datos del Inicio (los arma dashboardModel desde index.php)
+$r        = $resumen ?? [];
+$total    = (int) ($r['total'] ?? 0);
+$activos  = (int) ($r['activos'] ?? 0);
+$inactivos = (int) ($r['inactivos'] ?? 0);
+$pctActivos = $total > 0 ? round($activos * 100 / $total, 1) : 0;
+$pctAsist = $r['pct_asistencia'] ?? null;
+$perm     = $r['permisos'] ?? ['total' => 0, 'reposo' => 0, 'accidente' => 0, 'otros' => 0];
+$fechaRef = !empty($r['fecha_ref']) ? date('d/m/Y', strtotime($r['fecha_ref'])) : null;
+
+// Usuario que inició sesión
+$nombreUsuario = $_SESSION['nombre'] ?? 'Usuario';
+$rolUsuario    = $_SESSION['rol'] ?? '';
+$partes        = preg_split('/\s+/', trim($nombreUsuario));
+$iniciales     = mb_strtoupper(mb_substr($partes[0] ?? 'U', 0, 1) . mb_substr($partes[1] ?? '', 0, 1));
+?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>dashboard</title>
+    <title>Sistema de Asistencia | U.E. El Itaca</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../public/asset/css/dashboard.css">
     <link rel="stylesheet" href="../../public/asset/css/permisos.css">
-    <!-- Opcional: FontAwesome para los iconos si lo usas -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <div class="menu-container">
-            <!-- Botón de 3 líneas -->
-            <button class="hamburger-btn" id="menuToggle" type="button">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="dropdown-menu" id="dropdownMenu">
-                <a href="/index.php?action=dashboard">Inicio</a>
-                <a href="/index.php?action=logout">Cerrar sesión</a>
+    <!-- ================= MENÚ LATERAL ================= -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-scroll">
+            <div class="marca">
+                <div class="marca-logo"><svg viewBox="0 0 24 24"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/><path d="M12 14v7"/></svg></div>
+                <div>
+                    <div class="marca-nombre">U.E. El Itaca <span class="punto-online"></span></div>
+                    <div class="marca-sub">Control de personal</div>
+                </div>
             </div>
-        </div>
-    </header>
 
-    <!-- MENÚ FIJO -->
-    <aside class="sidebar">
-        <nav>
-            <ul>
-                <li><a href="#" class="nav-link active" data-target="vistaInicio">Inicio</a></li>
-                <li><a href="#" class="nav-link" data-target="vistaRegistro">Registro</a></li>
-                <li><a href="#" class="nav-link" data-target="vistaImportar">Importar Asistencia</a></li>
-                <li><a href="#" class="nav-link" data-target="vistaPermisos">Permisos</a></li>
-                <li><a href="#" class="nav-link" data-target="vistaConfig">Configuración</a></li>
-                <li><a href="/index.php?action=logout">Cerrar sesión</a></li>
-            </ul>
-        </nav>
+            <span class="menu-titulo">Menú principal</span>
+            <nav aria-label="Navegación principal">
+                <a href="#" class="nav-link active" data-target="vistaInicio"><svg viewBox="0 0 24 24"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Inicio</span></a>
+                <a href="#" class="nav-link" data-target="vistaRegistro"><svg viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg><span>Trabajadores</span></a>
+                <a href="#" class="nav-link" data-target="vistaTurnos"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>Turnos</span></a>
+                <a href="#" class="nav-link" data-target="vistaCargos"><svg viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg><span>Cargos</span></a>
+                <a href="#" class="nav-link" data-target="vistaImportar"><svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg><span>Importar asistencia</span></a>
+                <a href="#" class="nav-link" data-target="vistaPermisos"><svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><span>Permisos</span>
+                    <?php if (($perm['total'] ?? 0) > 0): ?><span class="insignia"><?= (int) $perm['total'] ?> vigentes</span><?php endif; ?>
+                </a>
+            </nav>
+
+            <span class="menu-titulo">Gestión</span>
+            <nav aria-label="Navegación de gestión">
+                <a href="#" class="nav-link" data-target="vistaReportes"><svg viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg><span>Reportes</span></a>
+                <a href="#" class="nav-link" data-target="vistaConfig"><svg viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg><span>Configuración</span></a>
+            </nav>
+        </div>
+
+        <div class="sidebar-pie">
+            <div class="usuario-caja">
+                <div class="usuario-avatar"><?= $e($iniciales) ?></div>
+                <div>
+                    <div class="usuario-nombre"><?= $e($nombreUsuario) ?></div>
+                    <div class="usuario-rol"><?= $e($rolUsuario) ?></div>
+                </div>
+            </div>
+            <a href="/index.php?action=logout" class="cerrar-sesion"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>Cerrar sesión</a>
+        </div>
     </aside>
 
-    <!-- ÁREA PRINCIPAL -->
-    <main class="main-content">
-        <!-- CONTENEDOR DE DATOS -->
-        <section class="data-wrapper">
-            
-            <!-- BARRA DE BÚSQUEDA Y FILTRO -->
+    <!-- ================= ÁREA PRINCIPAL ================= -->
+    <div class="main-area">
+        <header class="topbar">
+            <button type="button" class="btn-menu-movil" id="sidebarToggle" aria-label="Abrir menú">☰</button>
+
             <div class="search-header">
                 <div class="search-input-group">
-                    <span class="search-icon">🔍</span>
-                    <input type="text" placeholder="Buscar en el sistema...">
+                    <span>🔍</span>
+                    <input type="text" id="buscadorGlobal" placeholder="Filtrar los registros visibles por nombre, cédula o cargo...">
                 </div>
-                <button class="filter-btn">
-                    <span class="filter-icon">≡</span> Filtros
-                </button>
             </div>
 
-            <!-- CONTENEDOR DE VISTAS -->
+            <div class="topbar-fecha" id="fechaHoy"></div>
+        </header>
+
+        <main class="contenido">
             <div class="content-area">
-                
-                <!-- 1. VISTA DE INICIO (Visible por defecto) -->
+
+                <!-- 1. VISTA DE INICIO (visible por defecto) -->
                 <div id="vistaInicio" class="seccion-vista">
-                    <div class="welcome-container">
-                        <h2>Bienvenido al Sistema de Asistencia - U.E. El Itaca</h2>
-                        <p style="margin-top: 15px; color: #666;">
-                            Seleccione una opción del menú lateral para comenzar.
-                        </p>
-                    </div>
+                    <section class="hero">
+                        <div>
+                            <h2>Bienvenido al Sistema de Asistencia – U.E. El Itaca</h2>
+                            <p>Gestión centralizada de la asistencia laboral, la importación de marcaciones del biométrico y las justificaciones del personal.</p>
+                        </div>
+                        <div class="hero-acciones">
+                            <button type="button" class="btn-hero" data-goto="vistaImportar">Importar asistencia</button>
+                            <button type="button" class="btn-hero principal" data-goto="vistaPermisos">Registrar permiso</button>
+                        </div>
+                    </section>
+
+                    <section class="stats-grid">
+                        <article class="stat-card">
+                            <div class="stat-titulo">Total de trabajadores</div>
+                            <div class="stat-valor"><?= $total ?> <small>registrados</small></div>
+                            <div class="stat-detalle">
+                                <span>Activos: <strong><?= $activos ?></strong></span>
+                                <?php if (($r['nuevos_mes'] ?? 0) > 0): ?>
+                                    <span class="etiqueta verde">+<?= (int) $r['nuevos_mes'] ?> este mes</span>
+                                <?php else: ?>
+                                    <span>Inactivos: <strong><?= $inactivos ?></strong></span>
+                                <?php endif; ?>
+                            </div>
+                        </article>
+
+                        <article class="stat-card">
+                            <div class="stat-titulo">Estado del personal</div>
+                            <div class="stat-valor"><?= $activos ?> <small>activos · <?= $inactivos ?> inactivos</small></div>
+                            <div class="barra"><span style="width: <?= $pctActivos ?>%"></span></div>
+                            <div class="stat-detalle"><span><?= $pctActivos ?>% del personal está activo</span></div>
+                        </article>
+
+                        <article class="stat-card">
+                            <div class="stat-titulo">Permisos vigentes hoy</div>
+                            <div class="stat-valor"><?= (int) $perm['total'] ?> <small>justificaciones</small></div>
+                            <div class="stat-detalle">
+                                <span>Reposo: <strong><?= (int) $perm['reposo'] ?></strong></span>
+                                <span>Accidente: <strong><?= (int) $perm['accidente'] ?></strong></span>
+                                <span>Otros: <strong><?= (int) $perm['otros'] ?></strong></span>
+                            </div>
+                        </article>
+
+                        <article class="stat-card">
+                            <div class="stat-titulo">Asistencia del día</div>
+                            <?php if ($pctAsist !== null): ?>
+                                <div class="stat-valor pct-verde"><?= $pctAsist ?>%</div>
+                                <div class="stat-detalle">
+                                    <span><?= (int) $r['presentes'] ?> de <?= $activos ?> con marcación</span>
+                                    <span class="pct-rojo"><?= round(100 - $pctAsist, 1) ?>% sin marcar</span>
+                                </div>
+                                <div class="stat-detalle" style="border-top:none; padding-top:0; margin-top:4px;">
+                                    <span>Último día importado: <?= $e($fechaRef) ?></span>
+                                </div>
+                            <?php else: ?>
+                                <div class="stat-valor">—</div>
+                                <div class="stat-detalle"><span>Aún no hay asistencia importada</span></div>
+                            <?php endif; ?>
+                        </article>
+                    </section>
+
+                    <section class="inicio-fila">
+                        <article class="panel">
+                            <h3>Asistencia por cargo</h3>
+                            <p class="panel-sub">
+                                <?= $fechaRef ? 'Personal activo con marcación el ' . $e($fechaRef) : 'Importa un informe para ver la asistencia por cargo' ?>
+                            </p>
+                            <?php if (empty($r['por_cargo'])): ?>
+                                <div class="vacio-aviso">Sin datos de asistencia todavía.</div>
+                            <?php else: ?>
+                                <?php foreach ($r['por_cargo'] as $c): ?>
+                                    <div class="cargo-fila">
+                                        <div class="cargo-fila-info">
+                                            <?= $e($c['cargo']) ?>
+                                            <span><strong><?= $e($c['pct']) ?>%</strong> (<?= (int) $c['presentes'] ?>/<?= (int) $c['total'] ?> presentes)</span>
+                                        </div>
+                                        <div class="barra <?= $c['pct'] >= 80 ? '' : 'azul' ?>"><span style="width: <?= (float) $c['pct'] ?>%"></span></div>
+                                    </div>
+                                <?php endforeach; ?>
+                            <?php endif; ?>
+                        </article>
+
+                        <article class="panel">
+                            <h3>Acciones rápidas</h3>
+                            <button type="button" class="accion-item destacada" data-goto="vistaImportar">
+                                <span class="accion-icono"><svg viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg></span>
+                                <span><strong>Importar asistencia</strong><small>Archivo Excel (.xls o .xlsx) del biométrico</small></span>
+                            </button>
+                            <button type="button" class="accion-item" data-goto="vistaPermisos">
+                                <span class="accion-icono ambar"><svg viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></span>
+                                <span><strong>Registrar permiso o justificación</strong><small>Reposo, accidente laboral o permiso</small></span>
+                            </button>
+                            <button type="button" class="accion-item" data-goto="vistaRegistro">
+                                <span class="accion-icono"><svg viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg></span>
+                                <span><strong>Registrar trabajadores</strong><small>Alta de personal por cargo</small></span>
+                            </button>
+                        </article>
+                    </section>
+
+                    <section class="panel panel-tabla">
+                        <div class="panel-tabla-cabecera">
+                            <h3>Últimos registros de asistencia importados</h3>
+                            <p class="panel-sub">Marcaciones más recientes guardadas en el sistema.</p>
+                        </div>
+                        <div class="tabla-wrapper">
+                            <table class="tabla-registros">
+                                <thead>
+                                    <tr>
+                                        <th>Trabajador / Identificación</th>
+                                        <th>Cargo</th>
+                                        <th>Fecha</th>
+                                        <th>Hora</th>
+                                        <th>Tipo</th>
+                                        <th>Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php if (empty($r['ultimos'])): ?>
+                                        <tr><td colspan="6" class="vacio-aviso">Aún no hay marcaciones importadas.</td></tr>
+                                    <?php else: ?>
+                                        <?php foreach ($r['ultimos'] as $m): ?>
+                                            <tr>
+                                                <td>
+                                                    <div class="persona-celda">
+                                                        <span class="persona-avatar"><?= $e($m['iniciales']) ?></span>
+                                                        <span><strong><?= $e($m['nombre']) ?></strong><small>C.I: <?= $e($m['cedula']) ?></small></span>
+                                                    </div>
+                                                </td>
+                                                <td><?= $e($m['cargo']) ?></td>
+                                                <td><?= $e($m['fecha']) ?></td>
+                                                <td class="hora-mono"><?= $e($m['hora']) ?></td>
+                                                <td><span class="etiqueta gris"><?= $e($m['tipo']) ?></span></td>
+                                                <?php $clase = ['ok' => 'verde', 'alerta' => 'ambar', 'neutro' => 'gris'][$m['estado']['clase']] ?? 'gris'; ?>
+                                                <td><span class="etiqueta <?= $clase ?>"><?= $e($m['estado']['texto']) ?></span></td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
                 </div>
 
                 <!-- 2. VISTA DE REGISTRO (Oculta al inicio) -->
@@ -272,15 +439,39 @@
                     </div>
                 </div>
 
-                <!-- 4. VISTA DE CONFIGURACIÓN (Ejemplo por si la usas luego) -->
+                <!-- Turnos (por desarrollar) -->
+                <div id="vistaTurnos" class="seccion-vista" style="display: none;">
+                    <div class="modulo-pendiente">
+                        <h2>Turnos</h2>
+                        <p>Módulo en desarrollo: aquí se podrán crear, modificar y desactivar turnos.</p>
+                    </div>
+                </div>
+
+                <!-- Cargos (por desarrollar) -->
+                <div id="vistaCargos" class="seccion-vista" style="display: none;">
+                    <div class="modulo-pendiente">
+                        <h2>Cargos</h2>
+                        <p>Módulo en desarrollo: aquí se podrán crear, modificar y desactivar cargos.</p>
+                    </div>
+                </div>
+
+                <!-- Reportes (por desarrollar) -->
+                <div id="vistaReportes" class="seccion-vista" style="display: none;">
+                    <div class="modulo-pendiente">
+                        <h2>Reportes</h2>
+                        <p>Módulo en desarrollo: aquí se consultará la asistencia por trabajador y el resumen mensual de inasistencias.</p>
+                    </div>
+                </div>
+
+                <!-- CONFIGURACIÓN -->
                 <div id="vistaConfig" class="seccion-vista" style="display: none;">
-                    <h2>Configuración del Sistema</h2>
-                    <p style="margin-top: 15px; color: #666;">Panel de ajustes generales.</p>
+                    <h2>Configuración del sistema</h2>
+                    <p style="margin-top: 15px; color: #64748b;">Panel de ajustes generales.</p>
                 </div>
 
             </div>
-        </section>
-    </main>
+        </main>
+    </div>
 
     <div id="toastNotificacion" class="toast-notificacion">
         <span id="toastMensaje">Mensaje aquí</span>
@@ -290,10 +481,10 @@
         // Turnos reales de la base de datos para el formulario de registro
         window.TURNOS = <?= json_encode($turnos ?? [], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>;
     </script>
-    <script src="../../public/asset/js/navMenu.js"></script>
     <script src="../../public/asset/js/viewsSwitcher.js"></script>
     <script src="../../public/asset/js/permisos.js"></script>
     <script src="../../public/asset/js/registroWorkflow.js"></script>
     <script src="../../public/asset/js/importAsistencias.js"></script>
+    <script src="../../public/asset/js/dashboard.js"></script>
 </body>
 </html>
