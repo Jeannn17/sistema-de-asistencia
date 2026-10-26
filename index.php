@@ -18,10 +18,10 @@ require_once __DIR__ . '/app/controllers/loginController.php';
 
 
 // 3. Obtener la acción solicitada por URL (por defecto carga el login)
-$action = isset($_GET['action']) ? $_GET['action'] : 'home';
+$action = isset($_GET['action']) ? $_GET['action'] : 'login';
 
 // 4. Definir las páginas públicas que NO requieren sesión previa
-$rutasPublicas = ['home', 'login', 'autenticar'];
+$rutasPublicas = ['login', 'autenticar'];
 
 // 5. Control de Acceso (Seguridad): Si no ha iniciado sesión y la ruta no es pública, se devuelve al login
 if (!isset($_SESSION['usuario']) && !in_array($action, $rutasPublicas)) {
@@ -31,11 +31,6 @@ if (!isset($_SESSION['usuario']) && !in_array($action, $rutasPublicas)) {
 
 // 6. Enrutador principal (Front Controller)
 switch ($action) {
-    case 'home':
-        // Carga la vista principal de bienvenida o inicio
-        include __DIR__ . '/app/views/home.php';
-        break;
-
     case 'login':
         $loginController= new loginController($db);
         $loginController->mostrarLogin();
