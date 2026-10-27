@@ -100,23 +100,51 @@ class registroController {
     }
 
     public function update(): void {
-        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-            $personal = [
-                'id_persona'    => (int)$_POST['id_persona'],
-                'cedula'        => trim($_POST['cedula']),
-                'nombre'        => trim($_POST['nombre']),
-                'apellido'      => trim($_POST['apellido']),
-                'nro_registro'  => !empty($_POST['nro_registro']) ? (int)$_POST['nro_registro'] : null,
-                'id_cargo'      => (int)$_POST['id_cargo'],
-                'id_turno'      => (int)$_POST['id_turno'],
-                'fecha_ingreso' => $_POST['fecha_ingreso'],
-                // PDO + PostgreSQL convierte false en '' y rompe el boolean: usar 1/0
-                'activo'        => isset($_POST['activo']) ? 1 : 0
-            ];
-            $this->model->edit($personal);
-            header('Location: index.php?action=dashboard');
-            exit;
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            $this->redirigirTrabajadores('');
         }
+
+        $fecha = trim((string) ($_POST['fecha_ingreso'] ?? ''));
+        $fechaOk = DateTime::createFromFormat('!Y-m-d', $fecha);
+
+        $personal = [
+            'id_persona'    => (int) ($_POST['id_persona'] ?? 0),
+            'cedula'        => trim((string) ($_POST['cedula'] ?? '')),
+            'nombre'        => trim((string) ($_POST['nombre'] ?? '')),
+            'apellido'      => trim((string) ($_POST['apellido'] ?? '')),
+            'nro_registro'  => !empty($_POST['nro_registro']) ? (int) $_POST['nro_registro'] : null,
+            'id_cargo'      => (int) ($_POST['id_cargo'] ?? 0),
+            'id_turno'      => (int) ($_POST['id_turno'] ?? 0),
+            'fecha_ingreso' => $fecha,
+            // PDO + PostgreSQL convierte false en '' y rompe el boolean: usar 1/0
+            'activo'        => isset($_POST['activo']) ? 1 : 0
+        ];
+
+        if ($personal['id_persona'] <= 0 || $personal['cedula'] === '' || strlen($personal['cedula']) > 12
+            || $personal['nombre'] === '' || $personal['apellido'] === ''
+            || $personal['id_cargo'] <= 0 || $personal['id_turno'] <= 0
+            || !$fechaOk || $fechaOk->format('Y-m-d') !== $fecha) {
+            $this->redirigirTrabajadores('persona_invalido');
+        }
+
+        try {
+            $this->model->edit($personal);
+            $this->redirigirTrabajadores('persona_ok');
+        } catch (PDOException $e) {
+            error_log('Trabajadores (update): ' . $e->getMessage());
+            // 23505 = cédula o N° de registro repetido
+            $this->redirigirTrabajadores($e->getCode() === '23505' ? 'persona_duplicado' : 'persona_error');
+        }
+    }
+
+    /** Vuelve a la lista de trabajadores con el resultado y corta la ejecución. */
+    private function redirigirTrabajadores(string $status): void {
+        $params = ['action' => 'dashboard', 'vista' => 'trabajadores'];
+        if ($status !== '') {
+            $params['status'] = $status;
+        }
+        header('Location: index.php?' . http_build_query($params));
+        exit;
     }
 
     /** Redirige al dashboard con el resultado y corta la ejecución. */

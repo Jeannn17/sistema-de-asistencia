@@ -21,3 +21,8 @@ const toggleForm = () => {
 toggleButtons.forEach(button => {
     button.addEventListener("click", toggleForm);
 });
+
+// Si el registro falló en el servidor, se muestra de nuevo el panel de registro
+if (window.MOSTRAR_REGISTRO) {
+    toggleForm();
+}

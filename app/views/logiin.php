@@ -7,6 +7,9 @@
     <title>Professional Login/Register</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../public/asset/css/login.css">
+    <?php if (!empty($errorRegistro)): ?>
+    <script>window.MOSTRAR_REGISTRO = true;</script>
+    <?php endif; ?>
     <script src="../../public/asset/js/logiin.js" defer></script>
 </head>
 
@@ -17,23 +20,33 @@
     <div class="auth-wrapper">
 
         <div class="form-container register-container" id="register-container">
-            <form class="form-box" id="register-form">
+            <form class="form-box" id="register-form" action="index.php?action=registrar" method="POST">
                 <h2 class="form-title">Create Account</h2>
                 <p class="form-description">Regístrate para acceder a todas las funciones de nuestra plataforma.</p>
+                <?php if (!empty($errorRegistro)): ?>
+                    <p style="color: #ff4d4d; font-size: 0.9rem; margin-bottom: 10px;"><?= htmlspecialchars($errorRegistro) ?></p>
+                <?php endif; ?>
+                <div class="form-group">
+                    <label for="register-fullname">Nombre completo</label>
+                    <input id="register-fullname" type="text" name="nombre" maxlength="50" placeholder="ejemplo: María Pérez"
+                           value="<?= htmlspecialchars($old['nombre'] ?? '') ?>" required>
+                </div>
                 <div class="form-group">
                     <label for="register-name">Nombre de Usuario</label>
-                    <input id="register-name" type="text" placeholder="ejemplo: Usuario23">
+                    <input id="register-name" type="text" name="usuario" maxlength="50" placeholder="ejemplo: Usuario23"
+                           value="<?= htmlspecialchars($old['usuario'] ?? '') ?>" required>
                 </div>
                 <div class="form-group">
                     <label for="register-email">Correo Electronico</label>
-                    <input id="register-email" type="email" placeholder="ejemplo: user@email.com">
+                    <input id="register-email" type="email" name="correo" placeholder="ejemplo: user@email.com"
+                           value="<?= htmlspecialchars($old['correo'] ?? '') ?>" required>
                 </div>
                 <div class="form-group">
                     <label for="register-password">Contraseña</label>
-                    <input id="register-password" type="password" placeholder="********">
+                    <input id="register-password" type="password" name="clave" minlength="6" placeholder="Mínimo 6 caracteres" required>
                 </div>
 
-                <button class="form-button submit-button">Sign Up</button>
+                <button class="form-button submit-button" type="submit">Sign Up</button>
             </form>
         </div>
 
@@ -44,6 +57,9 @@
                 <p class="form-description">Inicia sesión con tu cuenta actual para continuar.</p>
                 <?php if (!empty($error)): ?>
                     <p style="color: #ff4d4d; font-size: 0.9rem; margin-bottom: 10px;"><?= htmlspecialchars($error) ?></p>
+                <?php endif; ?>
+                <?php if (!empty($exito)): ?>
+                    <p style="color: #22c55e; font-size: 0.9rem; margin-bottom: 10px;"><?= htmlspecialchars($exito) ?></p>
                 <?php endif; ?>
                 <div class="form-group">
                     <label for="login-email">Usuario</label>

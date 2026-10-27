@@ -33,9 +33,17 @@ class UsuarioModel {
     // 4. Registrar nuevo usuario (CREATE)
     public function registrar($nombre, $usuario, $correo, $password, $rol) {
         $passwordHash = password_hash($password, PASSWORD_DEFAULT);
-        $sql = "INSERT INTO usuario (nombre, usuario, correo, clave, rol) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO usuario (nombre, usuario, correo, clave, rol) VALUES (?, ?, ?, ?, ?)";
         $stmt = $this->pdo->prepare($sql);
         return $stmt->execute([$nombre, $usuario, $correo, $passwordHash, $rol]);
+    }
+
+    // 4.1 ¿Ya existe ese nombre de usuario o ese correo? (sin distinguir mayúsculas)
+    public function existeUsuarioOCorreo($usuario, $correo): bool {
+        $sql = "SELECT 1 FROM usuario WHERE lower(usuario) = lower(:usuario) OR lower(correo) = lower(:correo) LIMIT 1";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([':usuario' => $usuario, ':correo' => $correo]);
+        return (bool) $stmt->fetchColumn();
     }
 
     // 5. Actualizar datos de usuario (UPDATE)
