@@ -1,0 +1,29 @@
+# Blueprint de Render: crea el servicio web del sistema J.A.N.E. a partir del Dockerfile.
+# La base de datos NO se crea aquí: está en Neon (la gratuita de Render se borra a los 30 días).
+services:
+  - type: web
+    name: sistema-jane
+    runtime: docker
+    plan: free
+    region: ohio              # la misma zona que Neon "AWS US East 2 (Ohio)": consultas más rápidas
+    branch: main
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /auth/login
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL     # la connection string de Neon: se escribe a mano en el panel de Render
+        sync: false
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_LOG
+        value: stderr
+      - key: APP_TIMEZONE
+        value: America/Caracas
+      - key: TRUST_PROXY      # Render siempre pone su proxy (HTTPS) delante de la aplicación
+        value: "true"
+      - key: REGISTRO_ABIERTO
+        value: "true"
+      - key: SESSION_IDLE_MINUTES
+        value: "30"

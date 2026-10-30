@@ -1,0 +1,12 @@
+# Lo que NO entra en la imagen de Docker
+.git
+.gitignore
+.vscode
+.env
+vendor
+storage/logs/*
+!storage/logs/.gitkeep
+_obsoleto
+iniciar.bat
+servidor.php
+database/respaldo_para_neon.sql

@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.innerHTML = `
             <div class="card-header-row">
                 <span>Trabajador #${contadorTrabajadores}</span>
-                ${contadorTrabajadores > 1 ? '<button type="button" class="btn-eliminar-fila" onclick="eliminarTrabajador(this)">✕ Eliminar</button>' : ''}
+                ${contadorTrabajadores > 1 ? '<button type="button" class="btn-eliminar-fila" data-eliminar-fila>✕ Eliminar</button>' : ''}
             </div>
             <div class="inputs-grid">
                 <div class="input-group">
@@ -82,6 +82,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.closest('.trabajador-card').remove();
     }
 
+    // Botón "Eliminar" de cada trabajador (delegación de eventos; no se usa onclick en línea)
+    document.addEventListener('click', (e) => {
+        const boton = e.target.closest('[data-eliminar-fila]');
+        if (boton) window.eliminarTrabajador(boton);
+    });
+
     // Clic en botones de Cargo
     btnCargos.forEach(btn => {
         btn.addEventListener('click', function() {
@@ -108,59 +114,66 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Botón "← Volver" (Regresa a los cargos)
+    // ---------- Modos de la sección Trabajadores: lista <-> registro ----------
+    const modoLista = document.getElementById('trabajadoresLista');
+    const modoRegistro = document.getElementById('trabajadoresRegistro');
+
+    function hayDatosSinGuardar() {
+        return !!contenedorTrabajadores && pasoFormulario && pasoFormulario.style.display !== 'none'
+            && [...contenedorTrabajadores.querySelectorAll('input[type="text"]')].some(i => i.value.trim() !== '');
+    }
+
+    function mostrarRegistro() {
+        if (!modoLista || !modoRegistro) return;
+        modoLista.hidden = true;
+        modoRegistro.hidden = false;
+        if (pasoCargos) pasoCargos.style.display = 'block';
+        if (pasoFormulario) pasoFormulario.style.display = 'none';
+        if (searchHeader) searchHeader.style.display = 'none';   // el buscador filtra la lista, aquí no aplica
+        window.scrollTo({ top: 0 });
+    }
+
+    // También la usa viewsSwitcher.js al entrar a la sección desde el menú
+    window.mostrarListaTrabajadores = function () {
+        if (!modoLista || !modoRegistro) return;
+        modoRegistro.hidden = true;
+        modoLista.hidden = false;
+        if (contenedorTrabajadores) contenedorTrabajadores.innerHTML = '';
+        contadorTrabajadores = 0;
+        if (searchHeader) searchHeader.style.display = 'flex';
+    };
+
+    // "＋ Registrar trabajadores" (en la lista y en las acciones rápidas del Inicio)
+    document.querySelectorAll('[data-abrir-registro]').forEach(boton => {
+        boton.addEventListener('click', () => {
+            const seccion = document.getElementById('vistaTrabajadores');
+            if (seccion && seccion.style.display === 'none') {
+                const enlace = document.querySelector('.nav-link[data-target="vistaTrabajadores"]');
+                if (enlace) enlace.click();
+            }
+            mostrarRegistro();
+        });
+    });
+
+    // "← Volver a la lista" / "✕ Cancelar y volver a la lista"
+    document.querySelectorAll('[data-volver-lista]').forEach(boton => {
+        boton.addEventListener('click', () => {
+            if (hayDatosSinGuardar() && !confirm('Hay datos sin guardar. ¿Volver a la lista y descartarlos?')) return;
+            window.mostrarListaTrabajadores();
+        });
+    });
+
+    // Botón "← Cambiar cargo" (regresa al paso 1)
     if (btnVolverCargos) {
         btnVolverCargos.addEventListener('click', () => {
             if (pasoFormulario) pasoFormulario.style.display = 'none';
-            if (searchHeader) searchHeader.style.display = 'flex';
             if (pasoCargos) pasoCargos.style.display = 'block';
         });
     }
 
-    // Sistema de Notificaciones (Toast)
-    function mostrarToast(mensaje, tipo) {
-        const toast = document.getElementById('toastNotificacion');
-        const toastMensaje = document.getElementById('toastMensaje');
-
-        if (!toast) return;
-
-        toastMensaje.textContent = mensaje;
-        toast.classList.remove('toast-exito', 'toast-error', 'mostrar');
-
-        if (tipo === 'exito') {
-            toast.classList.add('toast-exito');
-        } else {
-            toast.classList.add('toast-error');
-        }
-
-        toast.classList.add('mostrar');
-
-        setTimeout(() => {
-            toast.classList.remove('mostrar');
-        }, 4000);
-    }
-
-    // Verificar parámetros URL al cargar
-    const params = new URLSearchParams(window.location.search);
-    if (params.has('status')) {
-        const status = params.get('status');
-        
-        if (status === 'success') {
-            mostrarToast('✅ ¡Registro exitoso!', 'exito');
-        } else if (status === 'duplicado') {
-            mostrarToast('⚠️ La cédula o el N° de registro ya existe.', 'error');
-        } else if (status === 'error') {
-            mostrarToast('❌ No se pudo registrar los datos.', 'error');
-        } else if (status === 'import_ok') {
-            mostrarToast(`✅ Importadas: ${params.get('insertados')} · Repetidas: ${params.get('duplicados')} · Empleados no registrados: ${params.get('omitidos')}`, 'exito');
-        } else if (status === 'import_vacio') {
-            mostrarToast('⚠️ No se encontraron marcaciones en el archivo.', 'error');
-        } else if (status === 'import_invalido') {
-            mostrarToast('⚠️ Sube un archivo .xlsx o .xls válido.', 'error');
-        } else if (status === 'import_error') {
-            mostrarToast('❌ No se pudo procesar el archivo.', 'error');
-        }
-
+    // Los avisos de ?status=... los muestra roles.js (se carga antes que este archivo).
+    // Aquí solo se limpia la URL para que al recargar no se repita el aviso.
+    if (new URLSearchParams(window.location.search).has('status')) {
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 });

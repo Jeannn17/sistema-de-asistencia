@@ -1,0 +1,7 @@
+# Los scripts de Linux deben guardarse con saltos de línea LF (con CRLF el contenedor no arranca)
+*.sh        text eol=lf
+Dockerfile  text eol=lf
+docker/*    text eol=lf
+render.yaml text eol=lf
+# Los .bat de Windows, con CRLF
+*.bat       text eol=crlf

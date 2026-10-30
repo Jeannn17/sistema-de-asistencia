@@ -1,0 +1,3 @@
+# Defensa extra: esta carpeta nunca debe ser accesible por la web
+# (ya está fuera de public/, esto protege si el servidor se configura mal)
+Require all denied

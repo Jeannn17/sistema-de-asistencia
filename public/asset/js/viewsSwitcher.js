@@ -5,8 +5,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const navLinks = document.querySelectorAll('.nav-link');
     const seccionesVista = document.querySelectorAll('.seccion-vista');
     const searchHeader = document.querySelector('.search-header');
-    const pasoCargos = document.getElementById('pasoCargos');
-    const pasoFormulario = document.getElementById('pasoFormulario');
 
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
@@ -27,12 +25,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 seccionObjetivo.style.display = 'block';
             }
 
-            // 4. Restablecer la barra de búsqueda y limpiar sub-pasos de registro
+            // 4. Restablecer la barra de búsqueda
             if (searchHeader) searchHeader.style.display = 'flex';
-            
-            if (targetId === 'vistaRegistro') {
-                if (pasoCargos) pasoCargos.style.display = 'block';
-                if (pasoFormulario) pasoFormulario.style.display = 'none';
+
+            // 5. Al entrar a Trabajadores siempre se muestra la lista (no un registro a medias)
+            if (targetId === 'vistaTrabajadores' && typeof window.mostrarListaTrabajadores === 'function') {
+                window.mostrarListaTrabajadores();
             }
         });
     });

@@ -25,6 +25,12 @@
             color: var(--dark);
         }
 
+        /* Fondo mientras carga el video (o cuando no se carga: móvil, ahorro de datos) */
+        html {
+            background: radial-gradient(circle at 50% 80%, #7c2d12 0%, #1c1917 55%, #0c0a09 100%);
+            min-height: 100%;
+        }
+
         .main-bg-video {
             position: fixed;
             top: 0;

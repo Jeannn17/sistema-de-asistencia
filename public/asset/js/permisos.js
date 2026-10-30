@@ -1,7 +1,6 @@
 // =========================================
 // MÓDULO DE PERMISOS / JUSTIFICACIONES
-// IMPORTANTE: este script va ANTES de registroWorkflow.js, porque ese archivo
-// limpia la URL (replaceState) y aquí se necesitan los parámetros ?vista y ?status.
+// El aviso del resultado (?status=permiso_...) y la vista (?vista=permisos) los muestra roles.js.
 // =========================================
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('formPermiso');
@@ -113,31 +112,5 @@ document.addEventListener('DOMContentLoaded', () => {
     sincronizarPersona();
     buscarPersona.setCustomValidity(''); // no mostrar el error antes de que el usuario escriba
 
-    // ---------- Volver a la sección Permisos después de guardar ----------
-    const params = new URLSearchParams(window.location.search);
-
-    if (params.get('vista') === 'permisos') {
-        const link = document.querySelector('.nav-link[data-target="vistaPermisos"]');
-        if (link) link.click();
-    }
-
-    // ---------- Aviso (toast) del resultado ----------
-    const mensajes = {
-        permiso_ok:        ['✅ Permiso registrado correctamente.', 'exito'],
-        permiso_duplicado: ['⚠️ Ya existe un permiso de ese tipo que se cruza con esas fechas.', 'error'],
-        permiso_invalido:  ['⚠️ Revisa los datos del formulario.', 'error'],
-        permiso_error:     ['❌ No se pudo guardar el permiso.', 'error'],
-    };
-    const status = params.get('status');
-
-    if (status && mensajes[status]) {
-        const toast = document.getElementById('toastNotificacion');
-        const toastMensaje = document.getElementById('toastMensaje');
-        if (toast && toastMensaje) {
-            toastMensaje.textContent = mensajes[status][0];
-            toast.classList.remove('toast-exito', 'toast-error', 'mostrar');
-            toast.classList.add(mensajes[status][1] === 'exito' ? 'toast-exito' : 'toast-error', 'mostrar');
-            setTimeout(() => toast.classList.remove('mostrar'), 4000);
-        }
-    }
+    // La vista (?vista=permisos) y el aviso del resultado (?status=permiso_...) los muestra roles.js
 });

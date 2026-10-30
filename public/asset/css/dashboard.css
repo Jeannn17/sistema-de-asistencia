@@ -721,6 +721,12 @@ input, select, textarea, button {
     font-size: 1.3rem;
 }
 
+.header-paso { flex-wrap: wrap; }
+.header-paso .btn-volver { white-space: nowrap; }
+
+/* Botón "Cancelar y volver a la lista" del paso 2: queda a la derecha */
+.header-paso h2 + .btn-volver { margin-left: auto; }
+
 .btn-volver {
     background-color: #6c757d;
     color: #ffffff;
@@ -1055,4 +1061,14 @@ input, select, textarea, button {
 
 .btn-primary-etl:active {
     transform: scale(0.99);
+}
+
+/* Cerrar sesión: ahora es un botón (POST + token CSRF) con el mismo aspecto que el enlace anterior */
+.form-cerrar-sesion { margin: 0; }
+button.cerrar-sesion {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    cursor: pointer;
 }

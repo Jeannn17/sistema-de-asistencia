@@ -1,0 +1,8 @@
+.env
+/vendor/
+/storage/logs/*
+!/storage/logs/.gitkeep
+
+# Respaldo temporal que genera database/migrar_a_neon.bat (contiene datos del personal)
+/database/respaldo_para_neon.sql
+/database/PEGAR_EN_NEON.sql

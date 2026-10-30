@@ -1,0 +1,27 @@
+# Apache: todo lo que no sea un archivo real pasa por el front controller (index.php)
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Caché del navegador para css, js, videos, imágenes y fuentes: las vistas los piden con ?v=<fecha>
+# (helper asset()), así que al cambiar un archivo cambia su URL y no se queda la versión vieja
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|mp4|webm|png|jpe?g|gif|svg|webp|ico|woff2?)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+    </FilesMatch>
+</IfModule>
+
+# Compresión de texto (html, css, js, json)
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/css application/javascript text/javascript application/json image/svg+xml
+</IfModule>
+
+# Nunca servir archivos ocultos (.env, .git, .htaccess...)
+<FilesMatch "^\.">
+    Require all denied
+</FilesMatch>

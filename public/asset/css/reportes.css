@@ -1,0 +1,126 @@
+/* =========================================
+   Vista Reportes (formulario del PDF de asistencia)
+   Usa las variables de dashboard.css y los botones de gestion.css
+   ========================================= */
+.reporte-form {
+    max-width: 760px;
+    padding: 22px 24px;
+}
+
+.reporte-paso {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--slate-100);
+}
+
+.reporte-paso .campo {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 7px;
+}
+
+.reporte-numero {
+    display: inline-flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--brand);
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.reporte-form label,
+.reporte-etiqueta {
+    color: var(--slate-500);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.reporte-form select,
+.reporte-form input[type="date"] {
+    max-width: 320px;
+    padding: 9px 12px;
+    border: 1px solid var(--slate-200);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--slate-900);
+    font: inherit;
+    font-size: 0.88rem;
+    outline: none;
+}
+
+.reporte-form select:focus,
+.reporte-form input[type="date"]:focus { border-color: var(--brand); }
+
+.reporte-frecuencias {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 10px;
+}
+
+.reporte-opcion {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 12px;
+    border: 1px solid var(--slate-200);
+    border-radius: 12px;
+    cursor: pointer;
+    text-transform: none !important;
+    letter-spacing: 0 !important;
+    transition: border-color 0.15s, background 0.15s;
+}
+
+.reporte-opcion:has(input:checked) {
+    border-color: var(--brand);
+    background: #eff6ff;
+}
+
+.reporte-opcion input { margin-top: 3px; accent-color: var(--brand); }
+
+.reporte-opcion strong {
+    display: block;
+    color: var(--slate-900);
+    font-size: 0.9rem;
+}
+
+.reporte-opcion small {
+    color: var(--slate-500);
+    font-size: 0.76rem;
+    font-weight: 500;
+}
+
+.reporte-rango {
+    margin: 0;
+    color: var(--brand-dark);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.reporte-pie {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+}
+
+.reporte-pie .check-linea {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    color: var(--slate-700, #334155);
+    font-size: 0.86rem;
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+}
